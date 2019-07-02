@@ -1,14 +1,21 @@
+/* global google*/
 import React, { Component } from "react";
 import { connect } from "react-redux";
 import { Form, Segment, Button, Grid, Header } from "semantic-ui-react";
-import{composeValidators, combineValidators, isRequired, hasLengthGreaterThan} from 'revalidate';
+import { geocodeByAddress, getLatLng } from "react-places-autocomplete";
+import {
+  composeValidators,
+  combineValidators,
+  isRequired,
+  hasLengthGreaterThan
+} from "revalidate";
 import { createEvent, updateEvent } from "../eventActions";
 import cuid from "cuid";
 import { reduxForm, Field } from "redux-form";
 import TextInput from "../../../app/common/form/TextInput";
 import TextArea from "../../../app/common/form/TextArea";
 import SelectInput from "../../../app/common/form/SelectInput";
-import DateInput from "../../../app/common/form/DateInput";
+import PlaceInput from "../../../app/common/form/PlaceInput";
 
 const mapState = (state, ownProps) => {
   const eventId = ownProps.match.params.id;
@@ -30,19 +37,18 @@ const actions = {
 };
 
 const validate = combineValidators({
-  title: isRequired({message:'Event title is required'}),
-  category: isRequired({message:'Event category is required'}),
+  title: isRequired({ message: "Event title is required" }),
+  category: isRequired({ message: "Event category is required" }),
   description: composeValidators(
-    isRequired({message:'Event title is required'}),
-    hasLengthGreaterThan(4)({message:'Description needs to be atleast 5 characters'})
-    )(),
-  city: isRequired('city'),
-  venue: isRequired('venue'),
-  date: isRequired('date')
-
-
-
-})
+    isRequired({ message: "Event title is required" }),
+    hasLengthGreaterThan(4)({
+      message: "Description needs to be atleast 5 characters"
+    })
+  )(),
+  city: isRequired("city"),
+  venue: isRequired("venue"),
+  date: isRequired("date")
+});
 
 const category = [
   { key: "drinks", text: "Drinks", value: "drinks" },
@@ -54,7 +60,12 @@ const category = [
 ];
 
 class EventForm extends Component {
+  state = {
+    cityLatLong: {},
+    venueLatLong: {}
+  };
   onFormSubmit = values => {
+    values.venueLatLng = this.state.venueLatLong;
     if (this.props.initialValues.id) {
       this.props.updateEvent(values);
       this.props.history.push(`/events/${this.props.initialValues.id}`);
@@ -70,8 +81,40 @@ class EventForm extends Component {
     }
   };
 
+  handleCitySelect = selectedCity => {
+    geocodeByAddress(selectedCity)
+      .then(results => getLatLng(results[0]))
+      .then(latlng => {
+        this.setState({
+          cityLatLong: latlng
+        });
+      })
+      .then(() => {
+        this.props.change("city", selectedCity);
+      });
+  };
+
+  handleVenueSelect = selectedVenue => {
+    geocodeByAddress(selectedVenue)
+      .then(results => getLatLng(results[0]))
+      .then(latlng => {
+        this.setState({
+          venueLatLong: latlng
+        });
+      })
+      .then(() => {
+        this.props.change("venue", selectedVenue);
+      });
+  };
+
   render() {
-    const { history, initialValues, invalid, submitting, pristine } = this.props;
+    const {
+      history,
+      initialValues,
+      invalid,
+      submitting,
+      pristine
+    } = this.props;
     return (
       <Grid>
         <Grid.Column width={10}>
@@ -102,28 +145,40 @@ class EventForm extends Component {
               <Header sub color="teal" content="Event Location Details" />
               <Field
                 name="city"
-                component={TextInput}
+                component={PlaceInput}
+                options={{ types: ["(cities)"] }}
+                onSelect={this.handleCitySelect}
                 placeholder="Event City"
               />
               <Field
                 name="venue"
-                component={TextInput}
+                options={{
+                  location: new google.maps.LatLng(this.state.cityLatLong),
+                  radius: 1000,
+                  types: ['establishment']
+                }}
+                onSelect= {this.handleVenueSelect}
+                component={PlaceInput}
                 placeholder="Event Venue"
               />
               <Field
                 name="date"
-                component={DateInput}
+                component={TextInput}
                 placeholder="Event Date"
               />
 
-              <Button disabled={invalid || submitting || pristine} positive type="submit">
+              <Button
+                disabled={invalid || submitting || pristine}
+                positive
+                type="submit"
+              >
                 Submit
               </Button>
               <Button
                 onClick={
                   initialValues.id
                     ? () => history.push(`/events/${initialValues.id}`)
-                    : () => history.push('/events')
+                    : () => history.push("/events")
                 }
                 type="button"
               >
