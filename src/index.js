@@ -20,13 +20,13 @@ let render = () => {
     <Provider store={store}>
       <BrowserRouter>
         <ScrollToTop>
-          <ReduxToastr
+          {/* <ReduxToastr
             position="bottom-right"
             transitionIn="fadeIn"
             transitionOut="fadeOut"
-          >
+          > */}
             <App />
-          </ReduxToastr>
+          {/* </ReduxToastr> */}
         </ScrollToTop>
       </BrowserRouter>
     </Provider>,
