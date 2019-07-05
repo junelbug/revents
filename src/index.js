@@ -9,10 +9,8 @@ import ScrollToTop from "./app/common/util/ScrollToTop";
 import * as serviceWorker from "./serviceWorker";
 import { BrowserRouter } from "react-router-dom";
 import { configureStore } from "./app/store/configureStore";
-import { loadEvents } from "./features/event/eventActions";
 
 const store = configureStore();
-store.dispatch(loadEvents());
 const rootEl = document.getElementById("root");
 
 let render = () => {
@@ -24,9 +22,9 @@ let render = () => {
             position="bottom-right"
             transitionIn="fadeIn"
             transitionOut="fadeOut"
-          > */}
+          >  */}
             <App />
-          {/* </ReduxToastr> */}
+           {/* </ReduxToastr> */}
         </ScrollToTop>
       </BrowserRouter>
     </Provider>,
